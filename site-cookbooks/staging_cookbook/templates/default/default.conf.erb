@@ -1,0 +1,24 @@
+upstream unicorn {
+  server unix:/tmp/unicorn.sock;
+}
+
+server {
+  listen 80;
+  server_name <%= node.staging_rails_app.server_name %>;
+  access_log /var/log/nginx/<%= node.staging_rails_app.server_name %>.access.log;
+  
+  root /var/www/staging_rails_app/current/public;
+  
+  
+  location / {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+    
+    if (!-f $request_filename) {
+      proxy_pass http://unicorn;
+      break;
+    }
+  }
+}
